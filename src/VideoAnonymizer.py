@@ -8,10 +8,7 @@ import time
 
 class VideoAnonymizer:
 
-    def __init__(self, embeddings_path, encoded_labels_path):
-        with open(embeddings_path, "rb") as f:
-            labeled_embeddings = pickle.load(f)
-
+    def __init__(self, labeled_embeddings, encoded_labels_path):
         with open(encoded_labels_path, "rb") as f:
             self.encoded_labels = pickle.load(f)
 

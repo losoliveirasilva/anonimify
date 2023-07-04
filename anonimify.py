@@ -24,34 +24,34 @@ def parse_args(parser):
     return args
 
 def create_labeled_embeddings(labeled_embeddings_filename):
+    embedder = KnownFaceEmbedder()
+
     if labeled_embeddings_filename == None:
-        embedder = KnownFaceEmbedder()
         embedder.process_images("datasets/")
         embedder.save_file(path=f"outputs/labeled_embeddings.pickle")
-        return embedder.labeled_embeddings()
+        return embedder
 
-    with open(labeled_embeddings_filename, "rb") as f:
-        labeled_embeddings = pickle.load(f)
+    embedder.load_embeddings_from_file(labeled_embeddings_filename)
 
-    return labeled_embeddings
+    return embedder
 
-def train_known_labeled_embeddings(labeled_embeddings, layers, epochs):
-    trainer = KnownEmbeddingTrainer(labeled_embeddings, layers=len(layers), units_per_layer=layers, epochs=epochs)
+def train_known_labeled_embeddings(embedder, layers, epochs):
+    trainer = KnownEmbeddingTrainer(embedder.labeled_embeddings(), layers=len(layers), units_per_layer=layers, epochs=epochs)
     trainer.train(model_name="trained_known_labeled_embeddings")
 
-def anonymize_video(video_filename, preserved_identities):
-    anonymizer = VideoAnonymizer("outputs/labeled_embeddings.pickle", "outputs/encoded_labels.pickle")
+def anonymize_video(video_filename, preserved_identities, embedder):
+    anonymizer = VideoAnonymizer(embedder.labeled_embeddings(), "outputs/encoded_labels.pickle")
     regions = anonymizer.save_regions(video_filename, "outputs/trained_known_labeled_embeddings.h5", "outputs/face_regions.pickle")
-    anonymizer.anonymize_regions(video_filename, f"{video_filename}__anonymized.mp4", regions, preserved_identities)
+    anonymizer.anonymize_regions(video_filename, f"anonymized.mp4", regions, preserved_identities)
 
 def main():
     create_file_structure()
     parser = get_args()
     args = parse_args(parser)
 
-    labeled_embeddings = create_labeled_embeddings(args.labeled_embeddings)
-    train_known_labeled_embeddings(labeled_embeddings, args.layers, args.epochs)
-    anonymize_video(args.filename, args.preserved_identities)
+    embedder = create_labeled_embeddings(args.labeled_embeddings)
+    train_known_labeled_embeddings(embedder, args.layers, args.epochs)
+    anonymize_video(args.filename, args.preserved_identities, embedder)
 
 if __name__ == "__main__":
     main()

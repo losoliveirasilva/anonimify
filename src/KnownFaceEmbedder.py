@@ -17,6 +17,16 @@ class KnownFaceEmbedder:
 
         self.analyzer.prepare(ctx_id=0)
 
+    def load_embeddings_from_file(self, filename):
+        with open(filename, "rb") as f:
+            labeled_embeddings = pickle.load(f)
+
+        self.labels = labeled_embeddings["labels"]
+        self.embeddings = labeled_embeddings["embeddings"]
+
+        img = cv2.imread("/home/los/Documents/ufsc/tcc/new_tests/datasets/Ben_Affleck/000001.jpg")
+        self.analyzer.get(img)
+
     def generate_embedding(self, image, label):
         img_results = self.analyzer.get(image)
 

@@ -38,6 +38,8 @@ class KnownEmbeddingTrainer:
         embeddings = np.array(self.labeled_embeddings["embeddings"])
         input_shape = embeddings.shape[1]
 
+        print(f"----- INPUT SHAPE {input_shape} -----")
+
         model = SoftMax(input_shape=(input_shape,), num_classes=num_classes, layers=self.layers, units_per_layer=self.units_per_layer, dropout=self.dropout)
 
         training_model = model.build()
