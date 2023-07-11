@@ -27,35 +27,21 @@ class KnownEmbeddingTrainer:
         return (num_classes, one_hot_encoder.fit_transform(labels).toarray())
 
     def train(self, model_name=None, encoded_labels_path="outputs/encoded_labels.pickle"):
-        # summaries = open("outputs/conv_models_summaries.txt", 'a+')
-
         NAME = f"{self.layers}-dense-{self.units_per_layer}-nodes-{self.epochs}-epochs__{int(time.time())}"
-        print(model_name or NAME)
-        # summaries.write(model_name or NAME)
-        # summaries.write("\r\n")
 
         num_classes, labels = self.__encoded_labels()
         embeddings = np.array(self.labeled_embeddings["embeddings"])
         input_shape = embeddings.shape[1]
 
-        print(f"----- INPUT SHAPE {input_shape} -----")
 
         model = SoftMax(input_shape=(input_shape,), num_classes=num_classes, layers=self.layers, units_per_layer=self.units_per_layer, dropout=self.dropout)
 
         training_model = model.build()
 
-        print(training_model.summary())
-        # training_model.summary(print_fn=lambda x: summaries.write(x + '\n'))
-        # summaries.write("\r\n\r\n")
-
-        # summaries.close()
-
-        # fix
         cv = KFold(n_splits = 2, random_state = 42, shuffle=True)
 
         tensorboard = TensorBoard(log_dir="logs/{}".format(model_name or NAME))
 
-        # Train
         for train_idx, valid_idx in cv.split(embeddings):
             X_train, X_val, y_train, y_val = embeddings[train_idx], embeddings[valid_idx], labels[train_idx], labels[valid_idx]
 
@@ -66,7 +52,6 @@ class KnownEmbeddingTrainer:
                 validation_data=(X_val, y_val),
                 callbacks=[tensorboard])
 
-        # write the face recognition model to output
         training_model.save(f"outputs/{model_name or NAME}.h5")
         f = open(encoded_labels_path, "wb")
         f.write(pickle.dumps(self.label_encoder))
